@@ -26,6 +26,7 @@ public class HtmlRead {
             System.out.println("hi");
             String line;
 
+            //i think everything about this is the given code
             while ((line = reader.readLine()) != null) {
                 if (line.indexOf("href") == -1) {
                     continue;
