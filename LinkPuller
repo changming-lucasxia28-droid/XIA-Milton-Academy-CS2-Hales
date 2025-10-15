@@ -1,0 +1,132 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.net.URLConnection;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Scanner;
+
+// test
+public class LinkPuller {
+    public JFrame frame;
+    public JTextArea textArea;
+    public JTextField findField;
+    public JTextField replaceField;
+    public String onScreen;
+    public JLabel showOnScreen;
+
+    public LinkPuller() {
+        frame = new JFrame("Wiki Hyperlink Extractor");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(600, 400);
+
+        JPanel panel = new JPanel(new BorderLayout());
+        textArea = new JTextArea();
+        // uncomment the two lines bellow and comment the third line to have textarea scroll
+        JScrollPane scrollPane = new JScrollPane(textArea);
+        panel.add(scrollPane, BorderLayout.CENTER);
+
+        //panel.add(textArea, BorderLayout.CENTER);
+
+        JPanel controlPanel = new JPanel(new FlowLayout());
+
+
+
+        findField = new JTextField(10);
+        controlPanel.add(new JLabel("Link to Wiki:"));
+        controlPanel.add(findField);
+
+        JButton replaceButton = new JButton("Extract");
+        replaceButton.addActionListener(new ActionListener() {
+                                            @Override
+                                            public void actionPerformed(ActionEvent e) {
+                                                try {
+
+                                                    String wikiURL = findField.getText();
+                                                    URL fred = new URL(wikiURL);
+                                                    String base = fred.getProtocol() + "://" + fred.getHost();
+
+                                                    System.out.println("PULLING");
+                                                    URLConnection urlc = fred.openConnection();
+
+
+                                                    urlc.setRequestProperty("User-Agent", "Mozilla 5.0 (Windows; U; " + "Windows NT 5.1; en-US; rv:1.8.0.11) ");
+
+                                                    BufferedReader reader = new BufferedReader(
+                                                            new InputStreamReader(urlc.getInputStream()));  //this is the bottleneck, unknownhost exeption might be a faulty link or something on wikipedia's side
+
+                                                    String line;
+
+                                                    while ((line = reader.readLine()) != null) {
+                                                        if (line.indexOf("href") == -1) {
+                                                            continue;
+                                                        }
+                                                        int from = 0;
+                                                        while (true) {
+                                                            int start = line.indexOf("href=\"", from);
+                                                            if (start == -1) break; //so if the index is at -1, we skip the line because there are no hrefs
+
+                                                            int startOfLink = start + 6; //+6 is to account for the href="
+                                                            int endOfLink = line.indexOf("\"", startOfLink);
+                                                            if (endOfLink == -1) break;
+
+                                                            String link = line.substring(startOfLink, endOfLink);
+
+                                                            String output = null;
+
+                                                            if (link.startsWith("http")) {
+                                                                output = link;
+                                                            } else if (link.startsWith("//")) {
+                                                                output = fred.getProtocol() + ":" + link;
+                                                            } else if (link.startsWith("/")) {
+                                                                output = base + link;
+                                                            }
+
+                                                            if (output != null) {
+                                                                textArea.append(output + "\n");
+                                                            }
+
+
+                                                            from = endOfLink + 1;
+
+                                                        }
+                                                    }
+
+                                                } catch (Exception exception) {
+                                                    System.out.println();
+
+
+                                                }
+                                            }
+                                        }
+
+        );
+        controlPanel.add(replaceButton);
+
+        panel.add(controlPanel, BorderLayout.SOUTH);
+        frame.add(panel);
+        frame.setVisible(true);
+    }
+
+
+
+    public void replaceText() {
+        JLabel showOnScreenLabel = showOnScreen;
+
+
+
+        frame.add(showOnScreenLabel);
+        frame.setVisible(true);
+
+    }
+
+    public static void main(String[] args) {
+        LinkPuller app = new LinkPuller();
+    }
+}
