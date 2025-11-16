@@ -1,0 +1,74 @@
+public class Main {
+    int rows = 10; // Number of rows
+    int cols = 10; // Number of columns
+    int[][] array = new int[rows][cols];
+    public static void main(String[] args) {
+
+        // all of this is the setup thing
+
+        System.out.println("hi this is cookie monster!");
+        Main app;
+        app= new Main();
+    }
+
+
+    public Main(){
+        make();
+        print();
+        int result = minCookies(0,0);
+        System.out.println("Minimum number of cookies that Cookie Monster needs to eat is: "+result);
+
+    }
+
+
+    public void make(){
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                // System.out.println("I= "+i+ "J= "+j); this would print out the coords
+                array[i][j] = (int)(Math.random()*100) + 1;
+            }
+        }
+    }
+    public void print(){
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                System.out.print(array[i][j] + "\t");
+            }
+            System.out.println();
+        }
+    }
+
+
+    public void move(int x,int y){
+        System.out.println(array[x][y]);
+        if (x==rows-1&& y==cols-1) {
+            System.out.println("I made it home!");
+
+        }else {
+            if(x<rows-1) {
+                move(x+1, y);  // move right
+            }
+            if(y<cols-1) {
+                move(x, y+1); //move down
+            }
+        }
+
+    }
+
+
+    public int minCookies(int row, int col){
+        if (row >= rows || col >= cols) {
+            return 448934947; //just like a huge number to show that it should definitely stay away
+        }
+
+        if (row == rows -1 && col == cols-1) {
+            return array[row][col];
+        }
+
+        int costOfGoingDown = minCookies(row+1, col);
+        int costOfGoingRight = minCookies(row, col+1);
+
+        int optimalNextStep = Math.min(costOfGoingDown, costOfGoingRight);
+        return array[row][col] + optimalNextStep;
+    }
+}
