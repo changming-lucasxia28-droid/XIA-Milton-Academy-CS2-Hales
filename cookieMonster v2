@@ -1,0 +1,65 @@
+import java.util.ArrayList;
+
+public class Main {
+
+    int rows = 10; // Number of rows
+    int cols = rows; // Number of columns
+    int bestPath = 99999999; //current best path
+    String Superpaths = "";
+    int[][] array = new int[rows][cols];
+    public static void main(String[] args) {
+
+        System.out.println("Here is the grid:");
+        Main app;
+        app= new Main();
+    }
+    public Main(){
+        make();
+        print();
+        move(0,0, 0, "Path Used: ");
+
+        System.out.println(bestPath);
+        System.out.println(Superpaths);
+        System.out.println("I am home");
+    }
+    public void make(){
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                //System.out.println("I= "+i+ "J= "+j);
+                array[i][j] = (int)(Math.random()*100) + 1;
+            }
+        }
+    }
+    public void print(){
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                System.out.print(array[i][j] + "\t");
+            }
+            System.out.println();
+        }
+    }
+    public void move(int x,int y, int localSum, String paths) {
+        //System.out.println(array[x][y]);
+        localSum = array[x][y] + localSum;
+
+        if (x == rows - 1 && y == cols - 1) {
+            if (localSum < bestPath) {
+                bestPath = localSum;
+                Superpaths = paths;
+
+                }
+            } else {
+                if (x < rows - 1) {
+                    move(x + 1, y, localSum, paths + "Right "); //right
+                }
+                if (y < cols - 1) {
+                    move(x, y + 1, localSum, paths + "Down "); //down
+                }
+                if (x < rows - 1 && y < cols - 1) {
+                    move(x + 1, y + 1, localSum, paths + "Diagonal "); //diagonal
+                }
+            }
+
+        }
+    }
+
