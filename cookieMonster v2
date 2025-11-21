@@ -1,11 +1,9 @@
-import java.util.ArrayList;
-
 public class Main {
 
-    int rows = 10; // Number of rows
-    int cols = rows; // Number of columns
-    int bestPath = 99999999; //current best path
-    String Superpaths = "";
+    int rows = 30; // Number of rows
+    int cols = rows; // Number of columns. its same as rows because we want a square
+    int bestPath = 99999999; //current best path. we make it massive so that the first path will auto be the new best path
+    String Superpaths = ""; //this exists just to pull the best path out of "move" and so that we can print it
     int[][] array = new int[rows][cols];
     public static void main(String[] args) {
 
@@ -17,10 +15,10 @@ public class Main {
         make();
         print();
         move(0,0, 0, "Path Used: ");
-
+        // there three (below) are here so that we just print the best one possible
         System.out.println(bestPath);
         System.out.println(Superpaths);
-        System.out.println("I am home");
+        System.out.println("I am home!");
     }
     public void make(){
         for (int i = 0; i < rows; i++) {
@@ -40,26 +38,27 @@ public class Main {
     }
     public void move(int x,int y, int localSum, String paths) {
         //System.out.println(array[x][y]);
-        localSum = array[x][y] + localSum;
+        localSum = array[x][y] + localSum; //this stores the last path walked
 
         if (x == rows - 1 && y == cols - 1) {
-            if (localSum < bestPath) {
-                bestPath = localSum;
-                Superpaths = paths;
+            if (localSum < bestPath) { //if the last path walked is better than the current best path
+                bestPath = localSum; //place the best path with the last walked one
+                Superpaths = paths; //Superpath will just make it so that its accessible to more than the move class
 
-                }
-            } else {
-                if (x < rows - 1) {
-                    move(x + 1, y, localSum, paths + "Right "); //right
+            }
+        } else {
+            if (localSum < bestPath) {
+                if (x < rows - 1 && y < cols - 1) {
+                    move(x + 1, y + 1, localSum, paths + "Diagonal "); //diagonal
                 }
                 if (y < cols - 1) {
                     move(x, y + 1, localSum, paths + "Down "); //down
                 }
-                if (x < rows - 1 && y < cols - 1) {
-                    move(x + 1, y + 1, localSum, paths + "Diagonal "); //diagonal
+                if (x < rows - 1) {
+                    move(x + 1, y, localSum, paths + "Right "); //right
                 }
             }
 
         }
     }
-
+}
