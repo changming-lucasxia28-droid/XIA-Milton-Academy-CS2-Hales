@@ -1,0 +1,220 @@
+import java.awt.*;
+import javax.swing.*;
+import javax.swing.border.Border;
+import java.awt.event.*;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.sql.SQLOutput;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
+public class interfaceForPokedex {
+
+    private JFrame frame;
+    private JTextArea textArea;
+    public JTextArea textArea2;
+    public JTextField findField;
+    private JTextArea leftArea;
+    private JTextArea rightArea;
+    private JTextField inputField;
+    private int currentId;
+    private final int maxID = 1026;
+
+    public interfaceForPokedex() {
+        currentId = 1;
+        buildGUI();
+        loadPokemon("1");
+    }
+    private void buildGUI() {
+        frame = new JFrame("Pokédex");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(800, 500);
+        frame.setLayout(new BorderLayout());
+
+        JPanel top = new JPanel(new FlowLayout());
+
+        JButton backButton = new JButton("< Back");
+        JButton nextButton= new JButton("Next >");
+        JButton findButton = new JButton("Find");
+
+        inputField = new JTextField(10);
+
+        backButton.addActionListener(new BackListener());
+        nextButton.addActionListener(new NextListener());
+        findButton.addActionListener(new FindListener());
+
+        top.add(backButton);
+        top.add(new JLabel("Name or ID:"));
+        top.add(inputField);
+        top.add(findButton);
+        top.add(nextButton);
+
+        frame.add(top, BorderLayout.NORTH);
+
+        leftArea = new JTextArea();
+        rightArea = new JTextArea();
+
+        JScrollPane leftScroll = new JScrollPane(leftArea);
+        JScrollPane rightScroll = new JScrollPane(rightArea);
+        leftArea.setEditable(false);
+        rightArea.setEditable(false);
+
+        leftScroll.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+        rightScroll.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+
+        JPanel center = new JPanel(new GridLayout(1, 2));
+        center.add(leftScroll);
+        center.add(rightScroll);
+
+        frame.add(center, BorderLayout.CENTER);
+        frame.setVisible(true);
+    }
+
+    private class BackListener implements ActionListener {
+        public void actionPerformed(ActionEvent e) {
+            currentId = currentId - 1;
+            if (currentId < 1) currentId = maxID;
+            loadPokemon(String.valueOf(currentId));
+        }
+    }
+
+    private class NextListener implements ActionListener {
+        public void actionPerformed(ActionEvent e) {
+            currentId = currentId + 1;
+            if (currentId > maxID) currentId = 1;
+            loadPokemon(String.valueOf(currentId));
+        }
+    }
+
+    private class FindListener implements ActionListener {
+        public void actionPerformed(ActionEvent e) {
+            String text = inputField.getText().trim();
+            if (text.length() == 0) return;
+            loadPokemon(text.toLowerCase());
+        }
+    }
+
+    private void loadPokemon(String idOrName) {
+        String output;
+        String totalJson = "";
+
+        try {
+            URL url = new URL("https://pokeapi.co/api/v2/pokemon/" + idOrName.toLowerCase());
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("Accept", "application/json");
+
+            if (conn.getResponseCode() != 200) {
+
+                throw new RuntimeException("Failed : HTTP error code : "
+                        + conn.getResponseCode());
+            }
+
+            BufferedReader br = new BufferedReader(new InputStreamReader(
+                    (conn.getInputStream())));
+
+
+            System.out.println("Output from Server .... \n");
+            while ((output = br.readLine()) != null) {
+                totalJson += output;
+            }
+
+            conn.disconnect();
+
+        } catch (MalformedURLException e) {
+            leftArea.setText("No URL Found");
+            rightArea.setText(e.toString());
+            return;
+
+
+        } catch (IOException e) {
+            leftArea.setText("Error. No Pokemon found.");
+            rightArea.setText(e.toString());
+            return;
+
+        } catch (RuntimeException e) {
+            leftArea.setText("Oops \n");
+            rightArea.setText(e.toString());
+            return;
+        }
+
+        JSONObject jsonObject;
+        String result = "";
+        String leftText = "";
+        try {
+            JSONParser parser = new JSONParser();
+            jsonObject = (JSONObject) parser.parse(totalJson);
+
+            leftText += "Abilities:\n";
+            org.json.simple.JSONArray msg = (org.json.simple.JSONArray) jsonObject.get("abilities");
+            int n = msg.size();
+            for (int i = 0; i < n; i++) {
+                org.json.simple.JSONObject entry = (org.json.simple.JSONObject) msg.get(i);
+                org.json.simple.JSONObject abilityObj = (org.json.simple.JSONObject) entry.get("ability");
+                String abilityName = (String) abilityObj.get("name");
+                leftText += abilityName + "\n";
+            }
+
+            leftText += "\nType:\n";
+            org.json.simple.JSONArray types = (org.json.simple.JSONArray) jsonObject.get("types");
+            for (int i = 0; i < types.size(); i++) {
+                org.json.simple.JSONObject typeEntry = (org.json.simple.JSONObject) types.get(i);
+                org.json.simple.JSONObject typeObj = (org.json.simple.JSONObject) typeEntry.get("type");
+                String typeName = (String) typeObj.get("name");
+                leftText += typeName + "\n";
+            }
+
+            result += "\nMoves:\n";
+            org.json.simple.JSONArray moves = (org.json.simple.JSONArray) jsonObject.get("moves");
+            for (int i = 0; i < moves.size(); i++) {
+                org.json.simple.JSONObject moveEntry = (org.json.simple.JSONObject) moves.get(i);
+                org.json.simple.JSONObject moveObj = (org.json.simple.JSONObject) moveEntry.get("move");
+                String moveName = (String) moveObj.get("name");
+                result += moveName + "\n";
+            }
+
+            leftText += "\nStats:\n";
+            org.json.simple.JSONArray stats = (org.json.simple.JSONArray) jsonObject.get("stats");
+            for (int i = 0; i < stats.size(); i++) {
+                org.json.simple.JSONObject statEntry = (org.json.simple.JSONObject) stats.get(i);
+                long baseStat = (long) statEntry.get("base_stat");
+                org.json.simple.JSONObject statObj = (org.json.simple.JSONObject) statEntry.get("stat");
+                String statName = (String) statObj.get("name");
+                leftText += statName + ": " + baseStat + "\n";
+            }
+
+        } catch (ParseException e) {
+            leftArea.setText("Parse Error");
+            rightArea.setText(e.toString());
+            return;
+        }
+
+        long idLong = (long) jsonObject.get("id");
+        currentId = (int) idLong;
+
+        String name = (String) jsonObject.get("name");
+        name = name.substring(0, 1).toUpperCase() + name.substring(1);
+        long height = (long) jsonObject.get("height");
+        long weight = (long) jsonObject.get("weight");
+
+        leftArea.setText("#"+ currentId + " " + name +"\n\nHeight: " + height + "\nWeight: "+weight + "\n\n" + leftText);
+
+        rightArea.setText(result);
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                new interfaceForPokedex();
+            }
+        });
+    }
+}
+
